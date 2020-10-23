@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+Helper functions for 3D grid operations.
+
 Created on Thu Jan 23 20:55:40 2020
 
-@author: Johnny Tsao
-The same helper function file as poisson_helper_functions.py
-This uses function with mesh type.
+@author: Bing-Jyun Tsao (btsao2@illinois.edu)
 """
 
 import numpy as np
@@ -54,13 +54,8 @@ def D(phi_):
 def not_D(phi_):
     return np.heaviside(-phi_,1)
 
-# return the interior of the level set (phi < 0)
+# return the interior of the level set (phi > 0)
 def get_frame(phi_):
-    isOut = D(phi_)
-    return 1 - isOut
-
-# return the interior of the level set (phi < 0)
-def get_frame_n(phi_):
     isOut = D(-phi_)
     return 1 - isOut
 

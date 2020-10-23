@@ -2,11 +2,22 @@
 """
 Created on Wed Jan 22 14:09:48 2020
 
-@author: Johnny Tsao
+@author: Bing-Jyun Tsao (btsao2@illinois.edu)
 """
+"""
+This file incorporates the source term method proposed by John Towers in his paper
+A source term method for Poisson problems on irregular domains (2018)
+https://doi.org/10.1016/j.jcp.2018.01.038
+The comments in this code follows the numbering in Algorithm 2 in this paper.
+
+The main function solves the equation
+# coefficient Poisson equation:   div ( rho * grad(u)) = rhs
+# Neumann boundary condition:     u_n = -grad(u).grad(rho) / |grad(rho)| = boundary
+# Level set:                      phi = rho + dh
+"""
+
 import sys
-import mesh_helper_functions_3d as mhf3d
-import test_cases_3d as tc
+import mesh_helper_functions_3D as mhf3d
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,17 +29,12 @@ def setup_grid_3d(N_grid_val = 100, additional = 1):
     grid_min = -1.
     grid_max = 1.
     
-    global N_grid
     N_grid = N_grid_val
     # grid spacing
-    global h
     h = (grid_max - grid_min) / (N_grid) 
     
     # define arrays to hold the x and y coordinates
     xyz = np.linspace(grid_min,grid_max,N_grid + 1)
-    global x, y, z
-    x,y,z = xyz,xyz,xyz
-    global xmesh, ymesh, zmesh
     xmesh_full, ymesh_full, zmesh_full = np.meshgrid(xyz,xyz,xyz)
     mid = int(N_grid / 2)
     xmesh = xmesh_full[:,:, mid - additional : mid + 1 + additional]
@@ -133,8 +139,8 @@ def get_source(a, b, phi_,f_mat_, h_):
 def regularize(mesh_p, mesh):
     reg_min = np.min(mesh)
     reg_max = np.max(mesh)
-    too_large = mhf3d.get_frame_n(mesh_p - reg_max)
-    too_small = mhf3d.get_frame_n(reg_min - mesh_p)
+    too_large = mhf3d.get_frame(mesh_p - reg_max)
+    too_small = mhf3d.get_frame(reg_min - mesh_p)
     mesh_reg = mesh*(1-too_large)*(1-too_small) + too_large * reg_max + too_small * reg_min
     return mesh_reg
 
@@ -230,13 +236,13 @@ def interpolation(mesh, mesh_p, fmesh):
     return fmesh_p
 
 def no_boundary(phi):
-    isIn = mhf3d.get_frame_n(phi)
+    isIn = mhf3d.get_frame(phi)
     N1 = get_N1(phi)
     N2 = get_N2(phi)
     return isIn * (1-N2)
 
 def get_phi(rho_):
-    frame_full = mhf3d.get_frame_n(rho_)
+    frame_full = mhf3d.get_frame(rho_)
     frame_nobnd = no_boundary(rho_)
     d_rho = np.max(rho_ * (frame_full - frame_nobnd))
     print(r"d $\rho / \rho$",d_rho / np.max(rho_))
@@ -252,7 +258,7 @@ def get_phi(rho_):
 def poisson_jacobi_solver_zero(u_init_, maxIterNum_, source_, phi_, h,print_option = True):
     u_prev = np.copy(u_init_)
     u      = np.copy(u_init_)
-    isIn   = mhf3d.get_frame_n(phi_)
+    isIn   = mhf3d.get_frame(phi_)
     numIn  = np.sum(isIn)
     for i in range(maxIterNum_):
         # enforce boundary condition
@@ -336,7 +342,7 @@ def stm_coef_Neumann_3d(u_init_, maxMultiple_, mesh_, phi_, rho_, rhs_, coef_,\
     N2 = get_N2(phi)
     Omega_m = mhf3d.D(-phi)
     Omega_p = mhf3d.D(phi)
-    isIn = mhf3d.get_frame_n(phi)
+    isIn = mhf3d.get_frame(phi)
     
     #1. Extend g(x,y) off of Gamma, define b throughout N2
     xmesh_p, ymesh_p, zmesh_p = projection((xmesh,ymesh,zmesh), phi_)
@@ -422,7 +428,7 @@ def stm_coef_Neumann_3d(u_init_, maxMultiple_, mesh_, phi_, rho_, rhs_, coef_,\
     u_result_org = np.copy(u_result)
     
     # Quadruple lagrange extrapolation to the full grid
-    isIn_full = mhf3d.get_frame_n(rho)
+    isIn_full = mhf3d.get_frame(rho)
     eligible_0 = Omega_p * (1-N1)
     target_0 = isIn_full * (1-eligible_0)  
     u_extpl_lagrange = extrapolation(u_result_org, target_0, eligible_0)

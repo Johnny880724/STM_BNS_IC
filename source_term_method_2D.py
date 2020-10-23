@@ -2,7 +2,7 @@
 """
 Created on Wed Jan 22 14:09:48 2020
 
-@author: Johnny Tsao
+@author: Bing-Jyun Tsao (btsao2@illinois.edu)
 """
 """
 This file incorporates the source term method proposed by John Towers in his paper
@@ -11,18 +11,18 @@ https://doi.org/10.1016/j.jcp.2018.01.038
 The comments in this code follows the numbering in Algorithm 2 in this paper.
 
 The main function solves the equation
-Poisson equation:  div(zeta*grad(u)) = rhs   (here u is the velocity potential Phi)
-Level set function: rho = phi - delta phi
+# coefficient Poisson equation:   div ( rho * grad(u)) = rhs
+# Neumann boundary condition:     u_n = -grad(u).grad(rho) / |grad(rho)| = boundary
+# Level set:                      phi = rho + dh
 """
 
 import sys
-import mesh_helper_functions as mhf
-import mesh_helper_functions_3d as mhf3d
+import mesh_helper_functions_2D as mhf2d
 import numpy as np
 import matplotlib.pyplot as plt
 
 #adding to denominator to avoid 0/0 error
-singular_null = mhf.singular_null
+singular_null = mhf2d.singular_null
 
 def setup_grid(N_grid_val = 100):
     # grid dimension
@@ -46,23 +46,23 @@ def setup_grid(N_grid_val = 100):
 
 #discretization of Step, Delta functions
 def I(phi):
-    return mhf.D(phi)*phi
+    return mhf2d.D(phi)*phi
 
 def J(phi):
-    return 1./2 * mhf.D(phi)*phi**2
+    return 1./2 * mhf2d.D(phi)*phi**2
 
 def K(phi):
-    return 1./6 * mhf.D(phi)*phi**3
+    return 1./6 * mhf2d.D(phi)*phi**3
 
 #Characteristic function of N1
 ##Chi is 1 if in N1
 ##       0 if not in N1
 def Chi(phi):
     ret = np.zeros_like(phi)
-    ret[:-1,:] += mhf.D(-phi[:-1,:]*phi[ 1:,:])
-    ret[ 1:,:] += mhf.D(-phi[:-1,:]*phi[ 1:,:])
-    ret[:,:-1] += mhf.D(-phi[:,:-1]*phi[ :,1:])
-    ret[:, 1:] += mhf.D(-phi[:,:-1]*phi[ :,1:])
+    ret[:-1,:] += mhf2d.D(-phi[:-1,:]*phi[ 1:,:])
+    ret[ 1:,:] += mhf2d.D(-phi[:-1,:]*phi[ 1:,:])
+    ret[:,:-1] += mhf2d.D(-phi[:,:-1]*phi[ :,1:])
+    ret[:, 1:] += mhf2d.D(-phi[:,:-1]*phi[ :,1:])
     return np.heaviside(ret,0)
 
 # return the neighbor and the domain
@@ -93,44 +93,43 @@ def get_N3(phi):
 def H(phi_,h):
     J_mat = J(phi_)
     K_mat = K(phi_)
-    first_term_1 = mhf.laplace(J_mat,h,h) / (mhf.abs_grad(phi_,h,h)**2 + singular_null)
-    first_term_2 = -(mhf.laplace(K_mat,h,h) - J_mat*mhf.laplace(phi_,h,h))*mhf.laplace(phi_,h,h) / (mhf.abs_grad(phi_,h,h)**4 + singular_null)
+    first_term_1 = mhf2d.laplace(J_mat,h,h) / (mhf2d.abs_grad(phi_,h,h)**2 + singular_null)
+    first_term_2 = -(mhf2d.laplace(K_mat,h,h) - J_mat*mhf2d.laplace(phi_,h,h))*mhf2d.laplace(phi_,h,h) / (mhf2d.abs_grad(phi_,h,h)**4 + singular_null)
     first_term = first_term_1 + first_term_2
-    second_term = mhf.D(phi_)
+    second_term = mhf2d.D(phi_)
     return Chi(phi_) * first_term + (1-Chi(phi_)) * second_term
 
 # return the delta function discretized in the paper -formula 4
 def delta(phi_,h):
     I_mat = I(phi_)
     J_mat = J(phi_)
-    first_term = mhf.laplace(I_mat,h,h) / (mhf.abs_grad(phi_,h,h)**2 + singular_null)
-    first_term -= (mhf.laplace(J_mat,h,h) - I_mat*mhf.laplace(phi_,h,h))*mhf.laplace(phi_,h,h) / (mhf.abs_grad(phi_,h,h)**4 + singular_null)
+    first_term = mhf2d.laplace(I_mat,h,h) / (mhf2d.abs_grad(phi_,h,h)**2 + singular_null)
+    first_term -= (mhf2d.laplace(J_mat,h,h) - I_mat*mhf2d.laplace(phi_,h,h))*mhf2d.laplace(phi_,h,h) / (mhf2d.abs_grad(phi_,h,h)**4 + singular_null)
     return Chi(phi_) * first_term
     
 # return the source term discretized in the paper
 def get_source(a, b, phi_,f_mat_, h_):
     H_h_mat = H(phi_,h_)
-    H_mat = mhf.D(phi_)
-    term1 = mhf.laplace(b * H_mat,h_,h_)
-    term2 = - H_h_mat * mhf.laplace(b, h_, h_)
-    term3 = - (a - mhf.grad_n_n(b,phi_,h_,h_)) * delta(phi_, h_) * mhf.abs_grad(phi_,h_,h_)
+    H_mat = mhf2d.D(phi_)
+    term1 = mhf2d.laplace(b * H_mat,h_,h_)
+    term2 = - H_h_mat * mhf2d.laplace(b, h_, h_)
+    term3 = - (a - mhf2d.grad_n(b,phi_,h_,h_)) * delta(phi_, h_) * mhf2d.abs_grad(phi_,h_,h_)
     term4 = H_h_mat * f_mat_
     S_mat = term1 + term2 + term3 + term4
-    # mhf3d.plot2d(term2+term3,"1")
     return S_mat
 
 # regularize the new grid mesh_p to stay within the min and max of mesh
 def regularize(mesh_p, mesh):
     reg_min = np.min(mesh)
     reg_max = np.max(mesh)
-    too_large = mhf3d.get_frame_n(mesh_p - reg_max)
-    too_small = mhf3d.get_frame_n(reg_min - mesh_p)
+    too_large = mhf2d.get_frame(mesh_p - reg_max)
+    too_small = mhf2d.get_frame(reg_min - mesh_p)
     mesh_reg = mesh*(1-too_large)*(1-too_small) + too_large * reg_max + too_small * reg_min
     return mesh_reg
 
 # return the domain without two layers of the boundary 
 def no_boundary(phi):
-    isIn = mhf.get_frame_n(phi)
+    isIn = mhf2d.get_frame(phi)
     N1 = get_N1(phi)
     N2 = get_N2(phi)
     return isIn * (1-N2)
@@ -139,8 +138,8 @@ def no_boundary(phi):
 def projection(mesh_, phi_):
     xmesh, ymesh = mesh_
     h = xmesh[0,1]-xmesh[0,0]
-    phi_abs_grad = mhf.abs_grad(phi_,h,h)
-    grad_tup = mhf.grad(phi_,h,h)
+    phi_abs_grad = mhf2d.abs_grad(phi_,h,h)
+    grad_tup = mhf2d.grad(phi_,h,h)
     nx = -grad_tup[0] / (phi_abs_grad + singular_null)
     ny = -grad_tup[1] / (phi_abs_grad + singular_null)
     xp = xmesh + nx * phi_ / (phi_abs_grad + singular_null)
@@ -205,7 +204,7 @@ def interpolation(mesh, mesh_p, fmesh):
     
     fmesh_p = f(rmesh)
     fmesh_p = np.moveaxis(fmesh_p,0,1)
-   return fmesh_p
+    return fmesh_p
 
 ## poisson solver function
 ## the result solution is subtracted by their average at every iteration
@@ -218,7 +217,7 @@ def interpolation(mesh, mesh_p, fmesh):
 def poisson_jacobi_solver_zero(u_init_, maxIterNum_, source_, phi_,h_,print_option = True):
     u_prev = np.copy(u_init_)
     u      = np.copy(u_init_)
-    isIn   = mhf.get_frame_n(phi_)
+    isIn   = mhf2d.get_frame(phi_)
     numIn  = np.sum(isIn)
     for i in range(maxIterNum_):
         # enforce boundary condition
@@ -244,7 +243,7 @@ def poisson_jacobi_solver_zero(u_init_, maxIterNum_, source_, phi_,h_,print_opti
         
         if(i % int(maxIterNum_*0.1) < 0.1):
             u_cur = np.copy(u)
-            L2Dif = mhf.L_n_norm(np.abs(u_cur - u_prev)) / mhf.L_n_norm(u_cur)
+            L2Dif = mhf2d.L_n_norm(np.abs(u_cur - u_prev)) / mhf2d.L_n_norm(u_cur)
             
             if(L2Dif < check_convergence_rate):
                 break;
@@ -262,6 +261,11 @@ def poisson_jacobi_solver_zero(u_init_, maxIterNum_, source_, phi_,h_,print_opti
 
 
 ## main coefficient poisson solver function
+    
+# coefficient Poisson equation:   div ( rho * grad(u)) = rhs
+# Neumann boundary condition:     u_n = -grad(u).grad(rho) / |grad(rho)| = boundary
+# Level set:                      phi = rho + dh    
+
 # u_init_          : (N*N np array) initial data
 # mesh_            : (duple)        (xmesh, ymesh)
 # phi_             : (N*N np array) level set
@@ -293,9 +297,9 @@ def stm_coef_Neumann(u_init_, mesh_, phi_, rho_, rhs_, coef_,\
     # Level variables
     N1 = get_N1(phi)
     N2 = get_N2(phi)
-    Omega_m = mhf.D(-phi)
-    Omega_p = mhf.D(phi)
-    isIn = mhf.get_frame_n(phi)
+    Omega_m = mhf2d.D(-phi)
+    Omega_p = mhf2d.D(phi)
+    isIn = mhf2d.get_frame(phi)
     
     #1. Extend g(x,y) off of Gamma, define b throughout N2
     xmesh_p, ymesh_p = projection((xmesh,ymesh), phi_)
@@ -316,10 +320,10 @@ def stm_coef_Neumann(u_init_, mesh_, phi_, rho_, rhs_, coef_,\
     b_mesh = np.copy(u_extpl)
     
     #4. Find the source term for coefficient
-    ux, uy = mhf.grad(u_cur_result, h, h)
+    ux, uy = mhf2d.grad(u_cur_result, h, h)
     ux_extpl = extrapolation(ux, target_0, eligible_0)
     uy_extpl = extrapolation(uy, target_0, eligible_0)
-    coefx, coefy = mhf.grad(coef,h,h)
+    coefx, coefy = mhf2d.grad(coef,h,h)
     extra = coefx * ux_extpl + coefy * uy_extpl
     f_use = (f_extpl - extra) / (coef - singular_null)
     
@@ -339,7 +343,7 @@ def stm_coef_Neumann(u_init_, mesh_, phi_, rho_, rhs_, coef_,\
             
             #A2 call a Poisson solver resulting in u throughout Omega
             u_result = poisson_jacobi_solver_zero(u_cur_result, maxIterNum, source, phi, h,print_it)
-            maxDif,L2Dif = mhf.get_error_N(u_result, sol, isIn)
+            maxDif,L2Dif = mhf2d.get_error_N(u_result, sol, isIn)
             if(maxDif > 100):
                 return np.nan * np.ones_like(u_result), it
             change = np.abs(u_result - u_cur_result)
@@ -357,7 +361,7 @@ def stm_coef_Neumann(u_init_, mesh_, phi_, rho_, rhs_, coef_,\
             b_mesh = np.copy(u_extpl)
             
             #A3-3 compute the new source term f_use
-            ux, uy = mhf.grad(u_cur_result, h, h)
+            ux, uy = mhf2d.grad(u_cur_result, h, h)
             ux_extpl = extrapolation(ux, target_0, eligible_0)
             uy_extpl = extrapolation(uy, target_0, eligible_0)
             extra = coefx * ux_extpl + coefy * uy_extpl
@@ -368,14 +372,14 @@ def stm_coef_Neumann(u_init_, mesh_, phi_, rho_, rhs_, coef_,\
             
             if(it > 5):
                 hard_conergence_rate = eta_
-                hard_convergence = maxChange / (np.max(np.abs(u_extpl)) + mhf.singular_null) < hard_conergence_rate
+                hard_convergence = maxChange / (np.max(np.abs(u_extpl)) + mhf2d.singular_null) < hard_conergence_rate
                 if(hard_convergence):
                     break
                 
     u_result_org = np.copy(u_result)
     
     # Quadruple lagrange extrapolation to the full grid
-    isIn_full = mhf.get_frame_n(rho)
+    isIn_full = mhf2d.get_frame(rho)
     eligible_0 = Omega_p * (1-N1)
     target_0 = isIn_full * (1-eligible_0)  
     u_extpl_lagrange = extrapolation(u_result_org, target_0, eligible_0)
