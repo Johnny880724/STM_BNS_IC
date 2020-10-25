@@ -25,3 +25,4 @@ The script `plot_data.py` takes the archived data as inputs to generate plots us
 
 ## References
 Reference papers are included in the directory `References`.
+The paper that `source_term_method_2D.py` and `source_term_method_2D.py` are referencing to is `Towers_2018.pdf`.
