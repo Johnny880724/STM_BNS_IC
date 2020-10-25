@@ -4,7 +4,7 @@ This file contains 2D test cases with singularity on the boundary.
 
 Created on Sun Jun 14 20:56:24 2020
 
-@author: Johnny Tsao
+@author: Bing-Jyun Tsao (btsao2@illinois.edu)
 """
 
 import os
@@ -150,7 +150,7 @@ if(const_delta_phi):
     cwd = os.getcwd()
     store_file = False
     if(store_file):
-        store_data_file = h5.File(cwd+"\\2d_singular\\const_sigma\\test_case_"+test_case+"_rlx_010_noQ.h5","w")
+        store_data_file = h5.File(cwd+"\\test_data\\2d_singular\\const_delta_phi\\test_case_"+test_case+"_dh10.h5","w")
         store_data_file.create_dataset("Ngrid",data = grid_array)
         store_data_file.create_dataset("L2",data = L2Dif_array)
         store_data_file.create_dataset("L2extpl",data = L2Dif_array_extpl)
@@ -164,8 +164,8 @@ if(const_delta_phi):
     
 
 # generating data for plot 2-3
-vary_sigma = False
-if(vary_sigma):
+const_N = True
+if(const_N):
     grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) 
     L2Dif_array_extpl = []
     L2Dif_array = []
@@ -178,7 +178,7 @@ if(vary_sigma):
         r0 = np.sqrt(np.e/4)
         r = mhf2d.XYtoR(xmesh,ymesh)
         
-        num_grid_dr = 5.0
+        num_grid_dr = 1.0
         dr_by_r0 = num_grid_dr * h / r0
         
         power_dict = {"1":2.0, "2":1.0, "3":0.5}
@@ -262,7 +262,7 @@ if(vary_sigma):
         print("grid size " + str(N_grid) + ": L2 extpl error " ,L2_rel_dif_extpl)
         
         
-    plot_grid_L2dif = False
+    plot_grid_L2dif = True
     if(plot_grid_L2dif):
         # plt.close("all")
         import matplotlib
@@ -295,7 +295,7 @@ if(vary_sigma):
     cwd = os.getcwd()
     store_file = False
     if(store_file):
-        store_data_file = h5.File(cwd+"\\2d_singular\\vary_sigma\\test_case_"+test_case+"_rlx_varN"+"{:1}".format(int(num_grid_dr))+ "_noQ.h5","w")
+        store_data_file = h5.File(cwd+"\\test_data\\2d_singular\\const_N\\test_case_"+test_case+"_N"+"{:1}".format(int(num_grid_dr))+ ".h5","w")
         store_data_file.create_dataset("Ngrid",data = grid_array)
         store_data_file.create_dataset("L2",data = L2Dif_array)
         store_data_file.create_dataset("L2extpl",data = L2Dif_array_extpl)
@@ -309,7 +309,7 @@ if(vary_sigma):
    
 
      
-plot_sigma = True
+plot_sigma = False
 if(plot_sigma):
     grid_array = [32,64,128]
     
@@ -441,7 +441,7 @@ if(plot_sigma):
         import h5py as h5
         store_file = True
         if(store_file):
-            filename = "\\2d_singular\\sigma_test\\test_case_"+test_case+"_rlx_N"+"{:2}".format(N_grid)+ "_noQ.h5"
+            filename = "\\test_data\\2d_singular\\N_test\\test_case_"+test_case+"_grid"+"{:2}".format(N_grid)+ ".h5"
             if(cwd[-11:] == '2d_singular'):
                 filename = cwd + filename[12:]
             else:
@@ -463,6 +463,7 @@ if(plot_sigma):
             
             store_data_file.close()
             
+# Additional test showed in the paper
 additional_test = False
 if(additional_test):
     test_ver = "2-3"

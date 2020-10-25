@@ -21,6 +21,7 @@ Here, three tests were presented:
 
 ## Data and plots
 Data generated through the tests and plots shown in the paper are included in the directory `\test_data\`.
+The script `plot_data.py` takes the archived data as inputs to generate plots used in the paper.
 
 ## References
 Reference papers are included in the directory `References`.

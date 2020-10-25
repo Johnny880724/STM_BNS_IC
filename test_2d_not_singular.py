@@ -4,7 +4,7 @@ This file contains 2D test cases without singularity issue.
 
 Created on Sun Jun 14 20:56:24 2020
 
-@author: Johnny Tsao
+@author: Bing-Jyun Tsao (btsao2@illinois.edu)
 """
 import mesh_helper_functions_2D as mhf2d
 import source_term_method_2D as stm2d
@@ -18,10 +18,9 @@ plt.close("all")
     
 grid_test = True
 if(grid_test):
-    # grid_array = [int(2**(i*0.05)) for i in range(100,160)]
-    grid_array = [int(2**(i*0.05)) for i in range(100,110)]
-    # grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) 
-    grid_array = [32,64]
+    # grid_array = [int(2**(i*0.05)) for i in range(100,104)]
+    grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) 
+    # grid_array = [32,64]
     L2Dif_array_extpl = []
     L2Dif_array = []
     vepc_result_array = []
@@ -100,7 +99,7 @@ if(grid_test):
     cwd = os.getcwd()
     store_file = True
     if(store_file):
-        store_data_file = h5.File(cwd+"\\test_case\\2d_not_singular\\test_case_1_rlx_dh10"+ "_noQ.h5","w")
+        store_data_file = h5.File(cwd+"\\test_data\\2d_not_singular\\test_case_1_dh10.h5","w")
         store_data_file.create_dataset("Ngrid",data = grid_array)
         store_data_file.create_dataset("L2",data = L2Dif_array)
         store_data_file.create_dataset("L2extpl",data = L2Dif_array_extpl)

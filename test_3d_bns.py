@@ -204,8 +204,9 @@ if(__name__ == "__main__"):
 
         
         # 4. calculate the error with theoretical value
-        theory_test = get_theory(sol_test,-rho_test)
-        maxDif,L2Dif = mhf3d.get_error_N(u_result_3d, theory_test , mhf3d.get_frame(rho_test))
+        theory_test = get_theory(sol_test,rho_test)
+        
+        maxDif,L2Dif = mhf3d.get_error_N(u_result_3d, theory_test , no_boundary(rho_test))
         
         end_time = time.time()
         time_elapsed = end_time - start_time
@@ -218,7 +219,7 @@ if(__name__ == "__main__"):
         
         write_result = True
         if(write_result):
-            result_file = h5.File(cwd+"\\result\\bns3d_result_final_noQ.h5","w")
+            result_file = h5.File(cwd+"\\test_data\\3d_bns\\bns3d_result_final_noQ.h5","w")
             # result_file = h5.File(cwd+"\\3d_bns\\bns3d_result_dh" + name[idx] + ".h5","w")
             result_file.create_dataset("vepc",data = u_result_3d)
             result_file.create_dataset("theory", data = theory_test)
