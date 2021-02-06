@@ -22,7 +22,8 @@ plt.close("all")
 # generating data for plot 2-1,2
 const_delta_phi = False
 if(const_delta_phi):
-    grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) 
+    # grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) # for archived
+    grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,125)])) # for archived
     L2Dif_array_extpl = []
     L2Dif_array = []
     vepc_result_array = []
@@ -36,11 +37,11 @@ if(const_delta_phi):
         
         
         power_dict = {"1":2.0, "2":1.0, "3":0.5}
-        test_case = "3"
+        test_case = "1"
         power = power_dict[test_case]
         
         rlx = 0.1
-        sigma = 0.10
+        sigma = 0.05
         
         ## test case 1 -- rho = r^2
         if(test_case == "1"):
@@ -148,9 +149,9 @@ if(const_delta_phi):
     import h5py as h5
     import os
     cwd = os.getcwd()
-    store_file = False
+    store_file = True
     if(store_file):
-        store_data_file = h5.File(cwd+"\\test_data\\2d_singular\\const_delta_phi\\test_case_"+test_case+"_dh10.h5","w")
+        store_data_file = h5.File(cwd+"\\test_data\\2d_singular\\const_delta_phi\\test_case_"+test_case+"_dh05.h5","w")
         store_data_file.create_dataset("Ngrid",data = grid_array)
         store_data_file.create_dataset("L2",data = L2Dif_array)
         store_data_file.create_dataset("L2extpl",data = L2Dif_array_extpl)
@@ -164,9 +165,11 @@ if(const_delta_phi):
     
 
 # generating data for plot 2-3
-const_N = True
+const_N = False
 if(const_N):
-    grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)])) 
+    # grid_array = list(dict.fromkeys([2*int(2**(i*0.05)) for i in range(80,140)]))# for archived
+    grid_array = list(dict.fromkeys([2*int(2**(i*0.04)) for i in range(100,155)]))
+    print(grid_array)
     L2Dif_array_extpl = []
     L2Dif_array = []
     vepc_result_array = []
@@ -178,7 +181,7 @@ if(const_N):
         r0 = np.sqrt(np.e/4)
         r = mhf2d.XYtoR(xmesh,ymesh)
         
-        num_grid_dr = 1.0
+        num_grid_dr = 3.0
         dr_by_r0 = num_grid_dr * h / r0
         
         power_dict = {"1":2.0, "2":1.0, "3":0.5}
@@ -293,7 +296,7 @@ if(const_N):
     import h5py as h5
     import os
     cwd = os.getcwd()
-    store_file = False
+    store_file = True
     if(store_file):
         store_data_file = h5.File(cwd+"\\test_data\\2d_singular\\const_N\\test_case_"+test_case+"_N"+"{:1}".format(int(num_grid_dr))+ ".h5","w")
         store_data_file.create_dataset("Ngrid",data = grid_array)
@@ -309,12 +312,14 @@ if(const_N):
    
 
      
-plot_sigma = False
+plot_sigma = True
 if(plot_sigma):
-    grid_array = [32,64,128]
+    # grid_array = [96]
+    # grid_array = [32,64,128]
     
     for N_grid in grid_array:
-        num_grid_dr_array = [10**(0.05*idx-2.0) for idx in range(60)]
+        num_grid_dr_array = [10**(0.017*idx-1.0) for idx in range(30,100)]
+        print(num_grid_dr_array)
         L2Dif_array_extpl = []
         L2Dif_array = []
         vepc_result_array = []
@@ -441,11 +446,8 @@ if(plot_sigma):
         import h5py as h5
         store_file = True
         if(store_file):
-            filename = "\\test_data\\2d_singular\\N_test\\test_case_"+test_case+"_grid"+"{:2}".format(N_grid)+ ".h5"
-            if(cwd[-11:] == '2d_singular'):
-                filename = cwd + filename[12:]
-            else:
-                filename = cwd + filename
+            filename = cwd+"\\test_data\\2d_singular\\N_test\\test_case_"+test_case+"_grid"+"{:2}".format(N_grid)+ ".h5"
+            
             print(filename)
 
                 

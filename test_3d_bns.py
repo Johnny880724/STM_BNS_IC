@@ -161,8 +161,14 @@ if(__name__ == "__main__"):
     omegay = bvyd + wy
     omegaz = bvzd
     
+    rhoc = np.array(bns_data_3d.get("rhoc"),dtype = float)
+    prec = np.array(bns_data_3d.get("prec"),dtype = float)
+    # print(np.max(rhoc), np.max(prec))
+    # K = (np.max(prec) / np.max(rhoc)**2)
+    # print(K)
     
-    test_3d = True
+    
+    test_3d = False
     if(test_3d):
         # maximum iteration number for the source term method
         maxIter = 500

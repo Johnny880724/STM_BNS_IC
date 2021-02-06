@@ -144,25 +144,24 @@ class plot_obj:
         self.y2 = np.log10(self.L2_array)        
         self.file.close()
                 
-    def data_convergence_plot(self, plot, out_dir,color_,label,endpoints):
+    def data_convergence_plot(self, plot, out_dir,color_,label,plot_endpoints,fit_endpoints,plot_grid_sw = True):
         fig, ax = plot
-        x = np.log10(self.Ngrid_use)
-        y1 = np.log10(self.L2extpl_array,dtype = float)
-        y2 = np.log10(self.L2_array, dtype = float)
-        st,ed = endpoints
-        # ax.plot(x,y1,"b.")
+        st, ed = plot_endpoints
+        x = np.log10(self.Ngrid_use)[st:ed]
+        y1 = np.log10(self.L2extpl_array,dtype = float)[st:ed]
+        y2 = np.log10(self.L2_array, dtype = float)[st:ed]
         ax.plot(x,y1,label = label + r"$(\vec{x} \in \Omega^+)$",color=color_,fillstyle="full",marker = 'o',alpha = 0.5, markersize = 3, linestyle = "None")
-        # ax.plot(x,y2,"r.")
         ax.plot(x,y2,label = label + r"$(\vec{x} \in W^+)$"     ,color=color_,fillstyle='none',marker = 'o',alpha = 0.5, markersize = 3, linestyle = "None")
-        
-        
-        tempx, model = fit(x,y1,(st,ed))
-    
-        ax.plot(tempx,model.predict(tempx),'-',label = "slope = " + "{:.2f}".format(model.coef_[0]), linewidth = 2.0)
+            
+        if(fit_endpoints):
+            fit_st,fit_ed = fit_endpoints
+            tempx, model = fit(x,y1,(fit_st,fit_ed))
+            ax.plot(tempx,model.predict(tempx),'-',label = "slope = " + "{:.2f}".format(model.coef_[0]), linewidth = 2.0, color = color_)
         # model = LinearRegression().fit(tempx, ly1)
         # ax.plot(tempx,model.predict(tempx),'--')
         ymax, ymin = (-2.0, -4.4)
-        plot_grid(ax,x,[ymax,ymin],0.2)
+        if(plot_grid_sw):
+            plot_grid(ax,x,[ymax,ymin],0.2)
         ax.set_ylim(ymin, ymax)
         # plot_grid(ax,x,np.concatenate((y1,y2)),0.2)
         
@@ -174,7 +173,7 @@ class plot_obj:
             print("figure saved")
             # plt.savefig(out_dir)
             
-    def data_x_y_plot(self, plot, out_dir,color_,title = "",label_="",):
+    def data_x_y_plot(self, plot, out_dir,color_,title = "",label_="",endpoints=(0,-1)):
         fig, ax = plot
         # x = np.log10(self.x_array)
         # ax.set_xticks(np.log(np.arange(10)))
@@ -184,8 +183,8 @@ class plot_obj:
         
         y1 = np.log10(self.L2extpl_array)
         y2 = np.log10(self.L2_array)
-        st = 0
-        ed = 57
+        st, ed= endpoints
+        st =np.argmax(np.less(y1, -2))
         lx = x[st:ed]
         ly1 = y1[st:ed]
         ly2 = y2[st:ed]
@@ -234,7 +233,6 @@ if(plot_non_singular):
     file = h5.File(cwd+"\\2d_not_singular\\test_case_1_dh00_archived.h5","r")
     L2extpl_array = np.array(file.get("L2extpl"),dtype = float)
     Ngrid_array = np.array(file.get("Ngrid"),dtype =float)
-    print(Ngrid_array)
     x = np.log10(Ngrid_array)
     y = np.log10(L2extpl_array)
     file.close()
@@ -275,7 +273,7 @@ if(plot_non_singular):
     fig.subplots_adjust(top=0.90)
     fig.subplots_adjust(right=0.95)
 
-    # fig.savefig("plot_1-1.png")
+    fig.savefig("plot_1-1.pdf")
 
             
 ## test case with constant sigma
@@ -288,90 +286,137 @@ if(plot_const_sigma_all):
     # ed = {"2": (19,17), "3": (17,15)}
     ed = {"2": (42,45), "3": (34,24)}
     legend_loc = {"2": (0.2,0.75), "3": (0.2,0.75)}
-    for case_str in case_str_list:
-        sigma_str_1 = "05"
-        sigma_str_2 = "10"
-        # file_name_1 = cwd+"\\2d_singular\\test_case_"+case_str+"_rlx_dh"+sigma_str_1+ ".h5"
-        # file_name_2 = cwd+"\\2d_singular\\test_case_"+case_str+"_rlx_dh"+sigma_str_2+ ".h5"  
-        file_name_1 = cwd+"\\2d_singular\\const_delta_phi\\test_case_"+case_str+"_dh"+sigma_str_1+ "_archived.h5"
-        file_name_2 = cwd+"\\2d_singular\\const_delta_phi\\test_case_"+case_str+"_dh"+sigma_str_2+ "_archived.h5"  
-        myPlot_1 = plot_obj(file_name_1,case_str,sigma_str_1)
-        myPlot_2 = plot_obj(file_name_2,case_str,sigma_str_2)
+    
+    if(False):
+        file_name_1 = cwd+"\\2d_singular\\const_delta_phi\\test_case_1_dh05.h5"
+        file_name_2 = cwd+"\\2d_singular\\const_delta_phi\\test_case_1_dh10.h5"  
+        myPlot_1 = plot_obj(file_name_1,"1","05")
+        myPlot_2 = plot_obj(file_name_2,"1","10")
         fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
         ax1 = fig.gca()
         ax2 = fig.gca()
-        # plot_grid(ax2,myPlot_2.x,myPlot_1.y1,0.2)
-        # plot_grid(ax2,myPlot_2.x,myPlot_1.y2,0.2)
-        # plot_grid(ax2,myPlot_2.x,myPlot_2.y1,0.2)
-        # plot_grid(ax2,myPlot_2.x,myPlot_2.y2,0.2)
-        # out_dir = cwd+"test_case_"+case_str + "_rlx_dh"+sigma_str+"_2.png"
-        ed1, ed2 = ed[case_str]
-        myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$\delta \varphi = 0.05\rho_0$",(0,ed1))
-        myPlot_2.data_convergence_plot((fig,ax2),"","red",r"$\delta \varphi = 0.10\rho_0$",(0,ed2))
-        # print(myPlot_1.Ngrid_use)
-        plt.title("2D singular test : case 2."+case_str + r" with const $\delta \varphi$")
-        ax1.legend(loc = legend_loc[case_str],ncol = 2,labelspacing = 0.0)
-        # ax2.legend(loc = (0.2, 0.8),ncol = 2,labelspacing = 0.0)
-        fig.subplots_adjust(left=0.15)
-        fig.subplots_adjust(bottom=0.20)
-        fig.subplots_adjust(top=0.90)
-        fig.subplots_adjust(right=0.95)
-        # fig.savefig("plot_2-" + str(i+1)+".png")
-        i+=1
+        myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$\delta \varphi = 0.05\rho_0$",(0,10))
+        myPlot_2.data_convergence_plot((fig,ax2),"","red",r"$\delta \varphi = 0.10\rho_0$",(0,10))
+        plt.ylim(-4.4, -3.0)
+        plt.title("2D singular test : case 2.1" + r" with const $\delta \varphi$")
+        ax1.legend(ncol = 2,labelspacing = 0.0)
+    
+    # test case 2-1
+        
+    sigma_str_1 = "05"
+    sigma_str_2 = "10"
+    file_name_1 = cwd+"\\2d_singular\\const_delta_phi\\test_case_2_dh05_archived.h5"
+    file_name_2 = cwd+"\\2d_singular\\const_delta_phi\\test_case_2_dh10_archived.h5"  
+    myPlot_1 = plot_obj(file_name_1,"1","05")
+    myPlot_2 = plot_obj(file_name_2,"1","10")
+    fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
+    ax1 = fig.gca()
+    ax2 = fig.gca()
+    myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$\delta \varphi = 0.05\rho_0$",(0,47),(0,42))
+    myPlot_2.data_convergence_plot((fig,ax2),"","red",r"$\delta \varphi = 0.10\rho_0$",(0,47),(0,45))
+    # print(myPlot_1.Ngrid_use)
+    plt.title("2D singular test : case 2.1" + r" with const $\delta \varphi$")
+    # ax1.legend(loc = (0.24,0.75) ,ncol = 2,labelspacing = 0.0)
+    ax1.legend(loc = (0.635,0.58) ,ncol = 1,labelspacing = 0.0)
+    fig.subplots_adjust(left=0.15)
+    fig.subplots_adjust(bottom=0.20)
+    fig.subplots_adjust(top=0.90)
+    fig.subplots_adjust(right=0.95)
+    plt.xlim(1.48,2.28)
+    plt.xlim(1.48,2.29)
+    plt.ylim(-4.5,-2.1)
+    plt.savefig("plot_2-1.pdf")
+           
+    
+    file_name_1 = cwd+"\\2d_singular\\const_delta_phi\\test_case_3_dh05_archived.h5"
+    file_name_2 = cwd+"\\2d_singular\\const_delta_phi\\test_case_3_dh10_archived.h5"  
+    myPlot_1 = plot_obj(file_name_1,"2","05")
+    myPlot_2 = plot_obj(file_name_2,"2","10")
+    fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
+    ax1 = fig.gca()
+    ax2 = fig.gca()
+    myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$\delta \varphi = 0.05\rho_0$",(0,45),(0,34))
+    myPlot_2.data_convergence_plot((fig,ax2),"","red",r"$\delta \varphi = 0.10\rho_0$",(0,28),(0,24),False)
+    
+    
+    # print(myPlot_1.Ngrid_use)
+    plt.title("2D singular test : case 2.2" + r" with const $\delta \varphi$")
+    ax1.legend(loc = (0.635,0.58) ,ncol = 1,labelspacing = 0.0)
+    fig.subplots_adjust(left=0.15)
+    fig.subplots_adjust(bottom=0.20)
+    fig.subplots_adjust(top=0.90)
+    fig.subplots_adjust(right=0.95)
+    plt.xlim(1.48,2.29)
+    plt.ylim(-4.4,-2.7)
+    plt.savefig("plot_2-2.pdf")
            
 ## test case with varing sigma
 # paper plot_2-3
 plot_vary_sigma2 = plot_all[2]
 if(plot_vary_sigma2):
     test_case_list = ["2"]
-    for test_case in test_case_list:  
-        file_name_1 = cwd+"\\2d_singular\\const_N\\test_case_"+test_case+"_N1_archived.h5"
-        myPlot_1 = plot_obj(file_name_1,test_case,"05")
-        
-        file_name_3 = cwd+"\\2d_singular\\const_N\\test_case_"+test_case+"_N5_archived.h5"
-        myPlot_3 = plot_obj(file_name_3,test_case,"20")
-        
-        fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
-        ax1 = fig.gca()
-        # ax2 = fig.gca()
-        ax3 = fig.gca()
-        myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$N_{sep} = 1.0$ ",(0,15))
-        # myPlot_2.data_convergence_plot((fig,ax2),"","green",r"$\delta\varphi = 3.0 \Delta x$ ")
-        myPlot_3.data_convergence_plot((fig,ax3),"","red",r"$N_{sep} = 5.0$ ", (0,17))
-        plt.title("2D singular test: case 2.2 with const "+r"$N_{sep}$")
-        plt.legend(loc = (0.25,0.75), ncol = 2,labelspacing = 0.0)
-        fig.subplots_adjust(left=0.15)
-        fig.subplots_adjust(bottom=0.20)
-        fig.subplots_adjust(top=0.90)
-        fig.subplots_adjust(right=0.95)
-        # fig.savefig("plot_2-3.png")
+    
+    file_name_1 = cwd+"\\2d_singular\\const_N\\test_case_2_N2.h5"
+    myPlot_1 = plot_obj(file_name_1,"2","05")
+    file_name_3 = cwd+"\\2d_singular\\const_N\\test_case_2_N4.h5"
+    myPlot_3 = plot_obj(file_name_3,"2","20")
+    
+    fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
+    ax1 = fig.gca()
+    ax3 = fig.gca()
+    
+    myPlot_1.L2extpl_array = np.delete(myPlot_1.L2extpl_array,31)
+    myPlot_1.L2_array = np.delete(myPlot_1.L2_array,31)
+    myPlot_1.Ngrid_use = np.delete(myPlot_1.Ngrid_use,31)
+    
+    myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$N_{sep} = 2.0$ ",(0,-1),(0,15))
+    # myPlot_1.data_convergence_plot((fig,ax1),"","blue",r"$N_{sep} = 3.0$ ",(0,-1),(0,24))
+    
+    
+    myPlot_3.L2extpl_array = np.delete(myPlot_3.L2extpl_array,31)
+    myPlot_3.L2_array = np.delete(myPlot_3.L2_array,31)
+    myPlot_3.Ngrid_use = np.delete(myPlot_3.Ngrid_use,31)
+    # myPlot_2.data_convergence_plot((fig,ax2),"","green",r"$\delta\varphi = 3.0 \Delta x$ ")
+    myPlot_3.data_convergence_plot((fig,ax3),"","red",r"$N_{sep} = 4.0$ ",(0,-1), (0,33))
+
+    plt.title("2D singular test: case 2.1 with const "+r"$N_{sep}$")
+    # plt.legend(loc = (0.25,0.75), ncol = 2,labelspacing = 0.0)
+    plt.legend(loc = (0.65,0.58), ncol = 1,labelspacing = 0.0)
+    fig.subplots_adjust(left=0.15)
+    fig.subplots_adjust(bottom=0.20)
+    fig.subplots_adjust(top=0.90)
+    fig.subplots_adjust(right=0.95)
+    plt.xlim(1.48, 2.2)
+    plt.ylim(-4.5,-2.4)
+    fig.savefig("plot_2-3.pdf")
         
 ## test case with varing sigma
 # used in paper plot_2-sigma
 plot_sigma_test = plot_all[3]
 if(plot_sigma_test):
     test_case = "2"
-    # grid_size_array =[32,46,64,91,128,181]
-    # grid_size_array =[46,91,181]
-    grid_size_array = [32,64,128]
-    # color = ["purple","blue","green","yellow","orange","red"]
+    # grid_size_array =[32,64,96,128]
+    grid_size_array =[32,64,128]
+    # grid_size_array = [128]
     color = ["blue","green","red"]
+    # color = ["blue","green","red","yellow"]
     fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
     for i in range(len(grid_size_array)):
         grid_size = grid_size_array[i]
-        file_name_1 = cwd+"\\2d_singular\\N_test\\test_case_"+test_case+"_grid"+"{:2}".format(grid_size)+"_archived.h5"
+        file_name_1 = cwd+"\\2d_singular\\N_test\\test_case_2_grid"+"{:2}".format(grid_size)+".h5"
         myPlot_1 = plot_obj(file_name_1,test_case,"05","num_grid_dr")
         ax1 = fig.gca()
-        myPlot_1.data_x_y_plot((fig,ax1),"",color[i],"",r"$N_{grid} = $"+str(grid_size))
+        myPlot_1.data_x_y_plot((fig,ax1),"",color[i],"",r"$N_{grid} = $"+str(grid_size),(2,-1))
         ax1.vlines([1,3],-5,1,linestyle = ':')
-        ax1.vlines([2],-5,1, color='grey', lw=16.8*figsize_all[0], alpha=0.1)
-        
-    plt.title("Varying separation: case 2.2")
+        # ax1.vlines([2],-5,1, color='grey', lw=16.8*figsize_all[0], alpha=0.1)
+        ax1.vlines([2],-5,1, color='grey', lw=22.8*figsize_all[0], alpha=0.1)
+        ax1.set_ylim(-5,-2)
+    plt.title("Varying separation: case 2.1")
     fig.subplots_adjust(left=0.15)
     fig.subplots_adjust(bottom=0.20)
     fig.subplots_adjust(top=0.90)
     fig.subplots_adjust(right=0.95)
-    # fig.savefig("plot_2-sigma.png")
+    fig.savefig("plot_2-sigma.pdf")
         
         
 # paper plot_3
@@ -379,7 +424,7 @@ bns_3d = plot_all[4]
 if(bns_3d):
     R0 = 1.218687320433609E+01 # length normalization constant
     # file = h5.File(cwd+"\\3d_bns\\bns3d_result_dhnone" + ".h5","r")
-    file = h5.File(cwd+"\\3d_bns\\bns3d_result_final_noQ" + ".h5","r")
+    file = h5.File(cwd+"\\3d_bns\\bns3d_result_final_archived" + ".h5","r")
     vepc = np.array(file.get("vepc"),dtype = float)
     theory = np.array(file.get("theory"),dtype = float)
     rho = np.array(file.get("rho"),dtype = float)
@@ -532,9 +577,9 @@ if(bns_3d):
         fig2 = plot2d_compare(vepc[:,layer,:], theory[:,layer,:],plot_frame[:,layer,:],"velocity potential comparison (y-z plane)",["z grid","y grid"])
         
         # plot2d_compare(vepc[layer,:,:], theory[layer,:,:],plot_frame[layer,:,:],"velocity potential comparison (z-x plane)",["z grid","x grid"])
-        # fig1.savefig("plot_3-1-xy.png")
-        # fig2.savefig("plot_3-1-yz.png")
-    
+        fig1.savefig("plot_3-1-xy.pdf")
+        fig2.savefig("plot_3-1-yz.pdf")
+    # 
     def adjust(fig):
         fig.subplots_adjust(left=0.10)
         fig.subplots_adjust(bottom=0.20)
@@ -560,7 +605,7 @@ if(bns_3d):
         # ax.set_title("$\partial_y \Phi$ along x-axis")
         
         adjust(fig)
-        # fig.savefig("plot_3-2-vy-x")
+        fig.savefig("plot_3-2-vy-x.pdf")
         
         print("vy-x rel", np.max(np.abs(vytheory[layer,:,layer] - vyi_result[layer,:,layer])) / (np.max(np.abs(vytheory[layer,:,layer]) + 1e-10)))
         
@@ -574,7 +619,7 @@ if(bns_3d):
         ax.set_ylabel("$\partial_y \Phi$")   
         # ax.set_title("$\partial_y \Phi$ along  z-axis")
         adjust(fig)
-        # fig.savefig("plot_3-2-vy-z")
+        fig.savefig("plot_3-2-vy-z.pdf")
         print("vy-z rel", np.max(np.abs(vytheory[layer,layer,:] - vyi_result[layer,layer,:])) / (np.max(np.abs(vytheory[layer,layer,:]) + 1e-10)))
         
         fig = plt.figure(figsize = figsize_plot, dpi = 300 )
@@ -588,7 +633,7 @@ if(bns_3d):
         # ax.set_title("$\partial_x \Phi$ along y-axis")
         
         adjust(fig)
-        # fig.savefig("plot_3-2-vx-y")
+        fig.savefig("plot_3-2-vx-y.pdf")
         
         
         
