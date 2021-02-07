@@ -19,8 +19,10 @@ Here, three tests were presented:
 2. For 2D test cases with singularity in the coefficients on the boundary: run `test_2d_singular.py`.
 3. For 3D realistic binary neutron stars initial condition test: run `test_3d_bns.py`, which will import a data file `bns_data_3d.h5` from `/bns_3d_data/`.
 
+Note that for singular tests, case 2 refers to case 2-1 in the paper, and case 3 refers to case 2-2 in the paper.
+
 ## Data and plots
-Data generated through the tests and plots shown in the paper are included in the directory `\test_data\`.
+Data generated through the tests and plots shown in the paper are included in the directory `\test_data\`. Previously generated data are stored with a label "archived" in the file name.
 The script `plot_data.py` takes the archived data as inputs to generate plots used in the paper.
 
 ## References

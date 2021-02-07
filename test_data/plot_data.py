@@ -356,9 +356,9 @@ plot_vary_sigma2 = plot_all[2]
 if(plot_vary_sigma2):
     test_case_list = ["2"]
     
-    file_name_1 = cwd+"\\2d_singular\\const_N\\test_case_2_N2.h5"
+    file_name_1 = cwd+"\\2d_singular\\const_N\\test_case_2_N2_archived.h5"
     myPlot_1 = plot_obj(file_name_1,"2","05")
-    file_name_3 = cwd+"\\2d_singular\\const_N\\test_case_2_N4.h5"
+    file_name_3 = cwd+"\\2d_singular\\const_N\\test_case_2_N4_archived.h5"
     myPlot_3 = plot_obj(file_name_3,"2","20")
     
     fig = plt.figure(figsize = figsize_all, dpi = dpi_all)
